@@ -2,9 +2,9 @@ package ui.industrial;
 
 import control.ControlServer;
 import control.IndustrialCommandHandler;
+import industrial.InduTwinServer;
 import industrial.IndustrialSupervisor;
 import industrial.MachineSimulator;
-import model.industrial.AlarmLevel;
 import model.industrial.IndustrialEvent;
 import model.industrial.MachineState;
 import monitoring.NetworkStatistics;
@@ -27,8 +27,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -42,11 +40,12 @@ public class IndustrialDashboard extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
+    private final industrial.InduTwinServer server;
+    private final boolean ownsServer;
     private final IndustrialSupervisor supervisor;
     private final MachineSimulator simulator;
-    private PersistenceService persistenceService;
-    private ControlServer controlServer;
-    private RmiServer rmiServer;
+    private final PersistenceService persistenceService;
+    private IndustrialSupervisor.SupervisorListener supervisorListener;
 
     private final JLabel headerTitleLabel;
     private final ModernBadge summaryOnlineBadge;
@@ -64,19 +63,39 @@ public class IndustrialDashboard extends JFrame {
     private final Timer refreshTimer;
 
     public IndustrialDashboard() throws IOException {
-        this(new IndustrialSupervisor(), new MachineSimulator());
+        this(new industrial.InduTwinServer(), true);
     }
 
     public IndustrialDashboard(IndustrialSupervisor supervisor, MachineSimulator simulator) {
+        this(new industrial.InduTwinServer(supervisor, simulator), true);
+    }
+
+    public IndustrialDashboard(industrial.InduTwinServer server) {
+        this(server, false);
+    }
+
+    private IndustrialDashboard(industrial.InduTwinServer server, boolean ownsServer) {
         super("SUPERVISION INDUSTRIELLE DISTRIBUÉE (UDP MULTICAST + TCP CONTRÔLE + RMI)");
 
-        this.supervisor = supervisor;
-        this.simulator = simulator;
+        this.server = server;
+        this.ownsServer = ownsServer;
+        this.supervisor = server.getSupervisor();
+        this.simulator = server.getSimulator();
+        this.persistenceService = server.getPersistenceService();
+
+        // Démarrage automatique des services si géré en interne par le Dashboard
+        if (ownsServer && this.server != null && !this.server.isRunning()) {
+            try {
+                this.server.start();
+            } catch (IOException e) {
+                System.err.println("[Dashboard] Erreur démarrage InduTwinServer: " + e.getMessage());
+            }
+        }
 
         // Configuration générale de la fenêtre
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1240, 880);
-        setMinimumSize(new Dimension(1020, 720));
+        setSize(1240, 780);
+        setMinimumSize(new Dimension(1020, 700));
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         getContentPane().setBackground(UITheme.BG_DARK);
@@ -135,8 +154,15 @@ public class IndustrialDashboard extends JFrame {
         leftPanel.add(Box.createRigidArea(new Dimension(0, 8)));
         leftPanel.add(faultInjectionPanel);
 
+        javax.swing.JScrollPane leftScroll = new javax.swing.JScrollPane(leftPanel);
+        UITheme.styleScrollPane(leftScroll);
+        leftScroll.setBorder(null);
+        leftScroll.setOpaque(false);
+        leftScroll.getViewport().setOpaque(false);
+        leftScroll.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
         // Split supérieur (Machines/Contrôle + Capteurs)
-        JSplitPane topSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, sensorPanel);
+        JSplitPane topSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftScroll, sensorPanel);
         topSplit.setDividerLocation(345);
         topSplit.setDividerSize(6);
         topSplit.setContinuousLayout(true);
@@ -145,7 +171,7 @@ public class IndustrialDashboard extends JFrame {
         topSplit.setBorder(BorderFactory.createEmptyBorder(10, 12, 6, 12));
 
         // 3. Panneaux inférieurs (Surveillance Temps Réel & Audit Persistant SQLite)
-        alarmPanel = new AlarmPanel(supervisor::clearEventHistory);
+        alarmPanel = new AlarmPanel(supervisor != null ? supervisor::clearEventHistory : null);
         networkHealthPanel = new NetworkHealthPanel();
 
         JSplitPane bottomLiveSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, alarmPanel, networkHealthPanel);
@@ -156,21 +182,14 @@ public class IndustrialDashboard extends JFrame {
         bottomLiveSplit.setBackground(UITheme.BG_DARK);
         bottomLiveSplit.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
 
-        if (this.supervisor.getPersistenceService() == null) {
-            this.persistenceService = new PersistenceService();
-            this.supervisor.setPersistenceService(this.persistenceService);
-        } else {
-            this.persistenceService = this.supervisor.getPersistenceService();
-        }
-
         databaseHistoryPanel = new DatabaseHistoryPanel(this.persistenceService);
 
         JTabbedPane bottomTabs = new JTabbedPane();
         bottomTabs.setFont(UITheme.FONT_SUBTITLE);
         bottomTabs.setBackground(UITheme.SURFACE);
         bottomTabs.setForeground(UITheme.TEXT_PRIMARY);
-        bottomTabs.addTab("🚨 Surveillance Temps Réel & Réseau", bottomLiveSplit);
-        bottomTabs.addTab("💾 Historique & Audit Persistant (SQLite)", databaseHistoryPanel);
+        bottomTabs.addTab("Surveillance Temps Réel & Réseau", bottomLiveSplit);
+        bottomTabs.addTab("Historique & Audit Persistant (SQLite)", databaseHistoryPanel);
         bottomTabs.setPreferredSize(new Dimension(0, 270));
 
         // Assemblage vertical
@@ -185,28 +204,33 @@ public class IndustrialDashboard extends JFrame {
         add(mainSplit, BorderLayout.CENTER);
 
         // Écouteur pour insertion immédiate des alarmes dans l'EDT Swing
-        supervisor.addSupervisorListener(new IndustrialSupervisor.SupervisorListener() {
-            @Override
-            public void onTelemetryUpdated(String machineId, model.TelemetryMessage msg) {
-                // Télémétrie rafraîchie par le timer périodique pour éviter le scintillement
-            }
+        if (supervisor != null) {
+            this.supervisorListener = new IndustrialSupervisor.SupervisorListener() {
+                @Override
+                public void onTelemetryUpdated(String machineId, model.TelemetryMessage msg) {
+                    // Télémétrie rafraîchie par le timer périodique pour éviter le scintillement
+                }
 
-            @Override
-            public void onMachineStateChanged(String machineId, MachineState state) {
-                SwingUtilities.invokeLater(() -> machinePanel.updateMachines(supervisor));
-            }
+                @Override
+                public void onMachineStateChanged(String machineId, MachineState state) {
+                    SwingUtilities.invokeLater(() -> machinePanel.updateMachines(supervisor));
+                }
 
-            @Override
-            public void onEventLogged(IndustrialEvent event) {
-                SwingUtilities.invokeLater(() -> alarmPanel.addEvent(event));
-            }
-        });
+                @Override
+                public void onEventLogged(IndustrialEvent event) {
+                    SwingUtilities.invokeLater(() -> alarmPanel.addEvent(event));
+                }
+            };
+            supervisor.addSupervisorListener(this.supervisorListener);
+        }
 
         // Timer de rafraîchissement fluide (cadencé à 500 ms sur l'EDT)
         refreshTimer = new Timer(500, e -> refreshUI());
+        refreshTimer.start();
 
-        // Démarrage réseau et persistance
-        initServices();
+        if (databaseHistoryPanel != null) {
+            databaseHistoryPanel.refreshHistoryAsync();
+        }
 
         // Nettoyage complet à la fermeture de la fenêtre
         addWindowListener(new WindowAdapter() {
@@ -222,11 +246,11 @@ public class IndustrialDashboard extends JFrame {
         if (refreshTimer != null && refreshTimer.isRunning()) {
             refreshTimer.stop();
         }
-        if (controlServer != null && controlServer.isRunning()) {
-            controlServer.stop();
-        }
-        if (rmiServer != null && rmiServer.isRunning()) {
-            rmiServer.stop();
+        if (supervisor != null && supervisorListener != null) {
+            try {
+                supervisor.removeSupervisorListener(supervisorListener);
+            } catch (Exception ignored) {}
+            supervisorListener = null;
         }
         if (databaseHistoryPanel != null) {
             databaseHistoryPanel.shutdown();
@@ -234,58 +258,34 @@ public class IndustrialDashboard extends JFrame {
         if (machineControlPanel != null) {
             machineControlPanel.shutdown();
         }
-        if (persistenceService != null && persistenceService.isRunning()) {
-            persistenceService.stop();
-        }
-        if (simulator != null && simulator.isRunning()) {
-            simulator.stop();
-        }
-        if (supervisor != null && supervisor.isRunning()) {
-            supervisor.stop();
+        if (ownsServer && server != null && server.isRunning()) {
+            server.stop();
         }
         super.dispose();
     }
 
+    public industrial.InduTwinServer getServer() {
+        return server;
+    }
 
+    public IndustrialSupervisor getSupervisor() {
+        return supervisor;
+    }
 
-    private void initServices() {
-        try {
-            // Démarrage du service de persistance SQLite
-            if (persistenceService != null && !persistenceService.isRunning()) {
-                persistenceService.start();
-                if (databaseHistoryPanel != null) {
-                    databaseHistoryPanel.refreshHistoryAsync();
-                }
-            }
+    public MachineSimulator getSimulator() {
+        return simulator;
+    }
 
-            if (supervisor != null && !supervisor.isRunning()) {
-                supervisor.start();
-            }
-            if (simulator != null && !simulator.isRunning()) {
-                simulator.start();
-            }
+    public PersistenceService getPersistenceService() {
+        return persistenceService;
+    }
 
-            // Démarrage du serveur TCP de contrôle (avec audit persistant SQLite)
-            if (controlServer == null && simulator != null) {
-                IndustrialCommandHandler handler = new IndustrialCommandHandler(simulator, persistenceService);
-                controlServer = new ControlServer(handler);
-                controlServer.start();
-            }
+    public ControlServer getControlServer() {
+        return server != null ? server.getControlServer() : null;
+    }
 
-            // Démarrage du serveur de supervision distante RMI
-            if (rmiServer == null && supervisor != null) {
-                rmiServer = new RmiServer(supervisor);
-                try {
-                    rmiServer.start();
-                } catch (Exception e) {
-                    System.err.println("[Dashboard] Avertissement démarrage RMI: " + e.getMessage());
-                }
-            }
-
-            refreshTimer.start();
-        } catch (IOException e) {
-            System.err.println("[Dashboard] Erreur initialisation services: " + e.getMessage());
-        }
+    public RmiServer getRmiServer() {
+        return server != null ? server.getRmiServer() : null;
     }
 
     /**

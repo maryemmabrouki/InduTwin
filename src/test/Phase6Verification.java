@@ -16,7 +16,6 @@ import model.NetworkMessage;
 import model.TelemetryMessage;
 import model.industrial.AlarmLevel;
 import model.industrial.EventType;
-import model.industrial.Machine;
 import model.industrial.MachineState;
 import model.industrial.SensorType;
 import monitoring.NetworkMonitor;
@@ -27,16 +26,12 @@ import network.MulticastManager;
 import rmi.RmiClient;
 import rmi.RmiServer;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**

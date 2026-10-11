@@ -66,7 +66,7 @@ R1-INDUS(config)# ip pim rp-address 192.168.20.1
 
 ## 4. Paramètres Applicatifs Java (TTL & Socket)
 
-Dans le code Java d'InduTwin ([`MulticastManager.java`](file:///c:/Users/pc/OneDrive/Desktop/4eme_année/CISCO/src/network/MulticastManager.java)) :
+Dans le code Java d'InduTwin ([`MulticastManager.java`](file:///c:/Users/pc/OneDrive/Desktop/4eme_année/InduTwin/src/network/MulticastManager.java)) :
 - La valeur du **TTL (Time-To-Live)** par défaut sur un datagramme Multicast standard est de `1` (limité au réseau local / même VLAN).
 - Pour traverser le routeur inter-VLAN entre le VLAN 10 et le VLAN 20, le socket d'émission multicast (`MulticastSocket` ou `DatagramSocket`) configure son TTL à `4` ou supérieur :
   ```java

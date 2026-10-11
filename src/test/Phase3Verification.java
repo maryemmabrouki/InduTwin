@@ -1,6 +1,5 @@
 package test;
 
-import industrial.FaultInjector;
 import industrial.IndustrialSupervisor;
 import industrial.MachineSimulator;
 import model.AlarmMessage;
@@ -8,7 +7,6 @@ import model.HeartbeatMessage;
 import model.TelemetryMessage;
 import model.industrial.AlarmLevel;
 import model.industrial.EventType;
-import model.industrial.IndustrialEvent;
 import model.industrial.Machine;
 import model.industrial.MachineState;
 import model.industrial.SensorType;
@@ -20,10 +18,8 @@ import ui.industrial.SensorPanel;
 import persistence.DatabaseConfig;
 
 import javax.swing.SwingUtilities;
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;

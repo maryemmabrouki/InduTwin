@@ -78,18 +78,18 @@ public class MachineControlPanel extends JPanel {
         JPanel standardButtons = new JPanel(new GridLayout(2, 2, 6, 6));
         standardButtons.setOpaque(false);
 
-        btnStart = new ModernButton("▶ START", ModernButton.ButtonVariant.PRIMARY);
+        btnStart = new ModernButton("START", ModernButton.ButtonVariant.PRIMARY);
         btnStart.addActionListener(e -> sendCommandAsync(ControlCommandType.START));
 
-        btnStop = new ModernButton("⏹ STOP", ModernButton.ButtonVariant.SECONDARY);
+        btnStop = new ModernButton("STOP", ModernButton.ButtonVariant.SECONDARY);
         btnStop.setCustomAccentColor(UITheme.STATUS_WARNING);
         btnStop.addActionListener(e -> sendCommandAsync(ControlCommandType.STOP));
 
-        btnMaint = new ModernButton("🛠 MAINTENANCE", ModernButton.ButtonVariant.SECONDARY);
+        btnMaint = new ModernButton("MAINTENANCE", ModernButton.ButtonVariant.SECONDARY);
         btnMaint.setCustomAccentColor(UITheme.STATUS_MAINTENANCE);
         btnMaint.addActionListener(e -> sendCommandAsync(ControlCommandType.MAINTENANCE));
 
-        btnReset = new ModernButton("🔄 RESET", ModernButton.ButtonVariant.GHOST);
+        btnReset = new ModernButton("RESET", ModernButton.ButtonVariant.GHOST);
         btnReset.addActionListener(e -> sendCommandAsync(ControlCommandType.RESET));
 
         standardButtons.add(btnStart);
@@ -101,7 +101,7 @@ public class MachineControlPanel extends JPanel {
         buttonsContainer.add(Box.createRigidArea(new Dimension(0, 8)));
 
         // Bouton EMERGENCY STOP proéminent et rouge
-        btnEmergencyStop = new ModernButton("🛑 ARRÊT D'URGENCE (EMERGENCY STOP)", ModernButton.ButtonVariant.DANGER);
+        btnEmergencyStop = new ModernButton("ARRÊT D'URGENCE", ModernButton.ButtonVariant.DANGER);
         btnEmergencyStop.setPreferredSize(new Dimension(0, 36));
         btnEmergencyStop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
         btnEmergencyStop.addActionListener(e -> sendCommandAsync(ControlCommandType.EMERGENCY_STOP));

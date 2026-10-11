@@ -1,6 +1,5 @@
 package test;
 
-import config.NetworkConfig;
 import control.ControlClient;
 import control.ControlCommand;
 import control.ControlCommandType;
@@ -12,7 +11,6 @@ import industrial.IndustrialSupervisor;
 import industrial.MachineSimulator;
 import model.industrial.AlarmLevel;
 import model.industrial.EventType;
-import model.industrial.IndustrialEvent;
 import model.industrial.Machine;
 import model.industrial.MachineState;
 import rmi.RmiClient;
@@ -24,13 +22,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Suite de vérification automatisée complète pour la Phase 4 :
@@ -73,6 +69,7 @@ public class Phase4Verification {
         }
 
         // Test 2 : Connexion TCP client
+        @SuppressWarnings("resource")
         ControlClient client = new ControlClient("127.0.0.1", TEST_TCP_PORT, 2000);
         try {
             client.connect();
@@ -290,6 +287,7 @@ public class Phase4Verification {
         // Test 14 : Déconnexion propre
         try {
             client.disconnect();
+            client.close();
             assertFalse(client.isConnected(), "Client doit être déconnecté");
             System.out.println("✅ [TEST 14 PASSÉ] Déconnexion TCP propre et fermeture des flux");
             passed++;
@@ -340,14 +338,6 @@ public class Phase4Verification {
 
         // Test 18 : Appel getActiveAlarms via RMI
         try {
-            // Enregistrement d'un événement d'alarme dans le superviseur
-            IndustrialEvent testAlarm = new IndustrialEvent(
-                    EventType.MACHINE_FAILURE,
-                    "M01",
-                    AlarmLevel.CRITICAL,
-                    "Test alarme critique pour RMI",
-                    System.currentTimeMillis()
-            );
             // On force un message d'alarme dans le superviseur
             model.AlarmMessage am = new model.AlarmMessage(
                     "M01", AlarmLevel.CRITICAL, EventType.MACHINE_FAILURE,

@@ -1,6 +1,5 @@
 package test;
 
-import config.NetworkConfig;
 import industrial.FaultInjector;
 import industrial.HeartbeatMonitor;
 import industrial.IndustrialSupervisor;
@@ -23,7 +22,6 @@ import network.MessageParser;
 import network.MulticastManager;
 
 import java.net.InetAddress;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;

@@ -4,8 +4,14 @@ import model.industrial.AlarmLevel;
 import model.industrial.MachineState;
 
 import javax.swing.BorderFactory;
+import javax.swing.JComboBox;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.border.Border;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.util.Arrays;
@@ -238,5 +244,64 @@ public final class UITheme {
             return secondary;
         }
         return fallback;
+    }
+
+    /**
+     * Applique le style officiel Dark Slate à une instance de JTable.
+     */
+    public static void styleTable(JTable table) {
+        table.setBackground(SURFACE);
+        table.setForeground(TEXT_PRIMARY);
+        table.setGridColor(BORDER);
+        table.setRowHeight(24);
+        table.setFont(FONT_BODY);
+        table.setSelectionBackground(SURFACE_HOVER);
+        table.setSelectionForeground(Color.WHITE);
+        table.setShowVerticalLines(false);
+        table.setShowHorizontalLines(true);
+
+        JTableHeader header = table.getTableHeader();
+        if (header != null) {
+            header.setBackground(SURFACE_ALT);
+            header.setForeground(TEXT_PRIMARY);
+            header.setFont(FONT_SUBTITLE);
+            header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
+            header.setReorderingAllowed(false);
+            header.setDefaultRenderer(new DefaultTableCellRenderer() {
+                private static final long serialVersionUID = 1L;
+                @Override
+                public Component getTableCellRendererComponent(
+                        JTable t, Object v, boolean isSel, boolean hasFoc, int r, int c) {
+                    Component comp = super.getTableCellRendererComponent(t, v, isSel, hasFoc, r, c);
+                    comp.setBackground(SURFACE_ALT);
+                    comp.setForeground(TEXT_PRIMARY);
+                    comp.setFont(FONT_SUBTITLE);
+                    setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createMatteBorder(0, 0, 1, 1, BORDER),
+                            BorderFactory.createEmptyBorder(4, 8, 4, 8)
+                    ));
+                    return comp;
+                }
+            });
+        }
+    }
+
+    /**
+     * Applique le style officiel Dark Slate à un JScrollPane.
+     */
+    public static void styleScrollPane(JScrollPane scrollPane) {
+        scrollPane.setBackground(SURFACE);
+        scrollPane.getViewport().setBackground(SURFACE);
+        scrollPane.setBorder(BorderFactory.createLineBorder(BORDER, 1));
+    }
+
+    /**
+     * Applique le style officiel Dark Slate à un JComboBox.
+     */
+    public static void styleComboBox(JComboBox<?> comboBox) {
+        comboBox.setBackground(SURFACE_ALT);
+        comboBox.setForeground(TEXT_PRIMARY);
+        comboBox.setFont(FONT_SMALL);
+        comboBox.setBorder(BorderFactory.createLineBorder(BORDER, 1));
     }
 }

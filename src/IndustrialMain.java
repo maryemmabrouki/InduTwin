@@ -47,52 +47,53 @@ public class IndustrialMain {
                 return;
             }
 
-            Scanner scanner = new Scanner(System.in);
-            boolean running = true;
+            try (Scanner scanner = new Scanner(System.in)) {
+                boolean running = true;
 
-            while (running && scanner.hasNextLine()) {
-                String input = scanner.nextLine().trim();
+                while (running && scanner.hasNextLine()) {
+                    String input = scanner.nextLine().trim();
 
-                switch (input) {
-                    case "1":
-                        System.out.println("\n🔥 [SCÉNARIO 2] Déclenchement de la surchauffe sur M02...");
-                        Machine m02 = simulator.getMachine("M02");
-                        injector.injectOverheating(m02, 98.0);
-                        break;
+                    switch (input) {
+                        case "1":
+                            System.out.println("\n🔥 [SCÉNARIO 2] Déclenchement de la surchauffe sur M02...");
+                            Machine m02 = simulator.getMachine("M02");
+                            injector.injectOverheating(m02, 98.0);
+                            break;
 
-                    case "2":
-                        System.out.println("\n⚠️ [SCÉNARIO 3] Coupure du Heartbeat de M03 (Attendez ~6s pour l'alerte OFFLINE)...");
-                        Machine m03 = simulator.getMachine("M03");
-                        injector.injectHeartbeatLoss(m03);
-                        break;
+                        case "2":
+                            System.out.println("\n⚠️ [SCÉNARIO 3] Coupure du Heartbeat de M03 (Attendez ~6s pour l'alerte OFFLINE)...");
+                            Machine m03 = simulator.getMachine("M03");
+                            injector.injectHeartbeatLoss(m03);
+                            break;
 
-                    case "3":
-                        System.out.println("\n🔄 [SCÉNARIO 4] Rétablissement du Heartbeat de M03...");
-                        Machine m03Restore = simulator.getMachine("M03");
-                        injector.restoreNormalOperation(m03Restore);
-                        break;
+                        case "3":
+                            System.out.println("\n🔄 [SCÉNARIO 4] Rétablissement du Heartbeat de M03...");
+                            Machine m03Restore = simulator.getMachine("M03");
+                            injector.restoreNormalOperation(m03Restore);
+                            break;
 
-                    case "4":
-                        System.out.println("\n⚡ Injection de vibration anormale sur M01 (Presse)...");
-                        Machine m01 = simulator.getMachine("M01");
-                        injector.injectExcessiveVibration(m01, 9.5);
-                        break;
+                        case "4":
+                            System.out.println("\n⚡ Injection de vibration anormale sur M01 (Presse)...");
+                            Machine m01 = simulator.getMachine("M01");
+                            injector.injectExcessiveVibration(m01, 9.5);
+                            break;
 
-                    case "5":
-                        System.out.println("\n✅ Rétablissement de toutes les machines...");
-                        for (Machine m : simulator.getMachines().values()) {
-                            injector.restoreNormalOperation(m);
-                        }
-                        break;
+                        case "5":
+                            System.out.println("\n✅ Rétablissement de toutes les machines...");
+                            for (Machine m : simulator.getMachines().values()) {
+                                injector.restoreNormalOperation(m);
+                            }
+                            break;
 
-                    case "q":
-                    case "Q":
-                        running = false;
-                        break;
+                        case "q":
+                        case "Q":
+                            running = false;
+                            break;
 
-                    default:
-                        System.out.println("Option non reconnue. Tapez 1, 2, 3, 4, 5 ou Q.");
-                        break;
+                        default:
+                            System.out.println("Option non reconnue. Tapez 1, 2, 3, 4, 5 ou Q.");
+                            break;
+                    }
                 }
             }
 

@@ -1,6 +1,5 @@
 package ui.industrial;
 
-import industrial.FaultInjector;
 import industrial.MachineSimulator;
 import model.industrial.Machine;
 import ui.industrial.components.ModernButton;
@@ -35,25 +34,25 @@ public class FaultInjectionPanel extends JPanel {
         JPanel buttonsGrid = new JPanel(new GridLayout(3, 2, 6, 6));
         buttonsGrid.setOpaque(false);
 
-        ModernButton overheatBtn = new ModernButton("🔥 M02 : Surchauffe (98°C)", ModernButton.ButtonVariant.SECONDARY);
+        ModernButton overheatBtn = new ModernButton("M02 : Surchauffe (98°C)", ModernButton.ButtonVariant.SECONDARY);
         overheatBtn.setCustomAccentColor(UITheme.STATUS_WARNING);
         overheatBtn.setFont(UITheme.FONT_SMALL);
 
-        ModernButton vibBtn = new ModernButton("⚡ M01 : Vibration (9.5 mm/s)", ModernButton.ButtonVariant.SECONDARY);
+        ModernButton vibBtn = new ModernButton("M01 : Vibration (9.5 mm/s)", ModernButton.ButtonVariant.SECONDARY);
         vibBtn.setCustomAccentColor(UITheme.STATUS_WARNING);
         vibBtn.setFont(UITheme.FONT_SMALL);
 
-        ModernButton stopHbBtn = new ModernButton("🔌 M03 : Couper Heartbeat", ModernButton.ButtonVariant.SECONDARY);
+        ModernButton stopHbBtn = new ModernButton("M03 : Couper Heartbeat", ModernButton.ButtonVariant.SECONDARY);
         stopHbBtn.setCustomAccentColor(UITheme.STATUS_CRITICAL);
         stopHbBtn.setFont(UITheme.FONT_SMALL);
 
-        ModernButton restoreHbBtn = new ModernButton("🔄 M03 : Rétablir Heartbeat", ModernButton.ButtonVariant.GHOST);
+        ModernButton restoreHbBtn = new ModernButton("M03 : Rétablir Heartbeat", ModernButton.ButtonVariant.GHOST);
         restoreHbBtn.setFont(UITheme.FONT_SMALL);
 
-        ModernButton stopPressBtn = new ModernButton("🛑 Arrêt Urgence M01", ModernButton.ButtonVariant.DANGER);
+        ModernButton stopPressBtn = new ModernButton("Arrêt Urgence M01", ModernButton.ButtonVariant.DANGER);
         stopPressBtn.setFont(UITheme.FONT_SMALL);
 
-        ModernButton resetAllBtn = new ModernButton("✅ Rétablir Tout", ModernButton.ButtonVariant.PRIMARY);
+        ModernButton resetAllBtn = new ModernButton("Rétablir Tout", ModernButton.ButtonVariant.PRIMARY);
         resetAllBtn.setFont(UITheme.FONT_SMALL);
 
         overheatBtn.addActionListener(e -> {

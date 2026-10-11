@@ -13,7 +13,7 @@ Pour garantir une rigueur méthodologique totale, la validation de la Phase 6 di
 
 ## 2. Tests Java Réellement Exécutés (`test.Phase6Verification`)
 
-La suite de vérification automatisée [`test.Phase6Verification`](file:///C:/Users/pc/OneDrive/Desktop/4eme_ann%C3%A9e/CISCO/src/test/Phase6Verification.java) valide l'adéquation du code applicatif Java avec les spécifications de l'infrastructure réseau.
+La suite de vérification automatisée [`test.Phase6Verification`](file:///C:/Users/pc/OneDrive/Desktop/4eme_ann%C3%A9e/InduTwin/src/test/Phase6Verification.java) valide l'adéquation du code applicatif Java avec les spécifications de l'infrastructure réseau.
 
 **Résultat global : 16 / 16 tests passés avec succès (0 échec).**
 
@@ -40,9 +40,9 @@ La suite de vérification automatisée [`test.Phase6Verification`](file:///C:/Us
 
 ## 3. Configurations Cisco IOS Préparées
 
-Deux fichiers de configuration Cisco IOS complets ont été rédigés et préparés pour déploiement. Ils se trouvent dans le répertoire [`docs/network/configs/`](file:///C:/Users/pc/OneDrive/Desktop/4eme_ann%C3%A9e/CISCO/docs/network/configs/) :
+Deux fichiers de configuration Cisco IOS complets ont été rédigés et préparés pour déploiement. Ils se trouvent dans le répertoire [`docs/network/configs/`](file:///C:/Users/pc/OneDrive/Desktop/4eme_ann%C3%A9e/InduTwin/docs/network/configs/) :
 
-1. **Routeur Cisco R1 (`R1-INDUS`)** : [`docs/network/configs/R1_Router_Config.ios`](file:///C:/Users/pc/OneDrive/Desktop/4eme_ann%C3%A9e/CISCO/docs/network/configs/R1_Router_Config.ios)
+1. **Routeur Cisco R1 (`R1-INDUS`)** : [`docs/network/configs/R1_Router_Config.ios`](file:///C:/Users/pc/OneDrive/Desktop/4eme_ann%C3%A9e/InduTwin/docs/network/configs/R1_Router_Config.ios)
    - Configuration Router-on-a-Stick sur l'interface `GigabitEthernet0/0`.
    - Sous-interfaces d'encapsulation 802.1Q : `Gi0/0.10` (`192.168.10.1/24`) et `Gi0/0.20` (`192.168.20.1/24`).
    - Routage Multicast : `ip multicast-routing`, PIM Sparse-Mode sur les sous-interfaces, adresse de Rendezvous Point (RP) `192.168.20.1`.
@@ -51,7 +51,7 @@ Deux fichiers de configuration Cisco IOS complets ont été rédigés et prépar
      - `ACL_INDUSTRIAL_IN` (appliquée en entrée de `Gi0/0.10`) : autorise `UDP 5555` vers `224.1.1.1`, autorise IGMP, autorise les retours TCP établis, bloque `TCP 1099` vers le serveur RMI, bloque tout autre accès direct vers la supervision.
    - Modular QoS CLI (MQC) : Class-maps `CM_CRITICAL_CONTROL` (TCP 5556, DSCP `CS6`) et `CM_INDUSTRIAL_TELEMETRY` (UDP 5555, DSCP `AF21`), Policy-map `PM_INDUSTRIAL_QOS` appliquant LLQ (Priority 30%) et CBWFQ (Bandwidth 40%).
 
-2. **Commutateur Cisco Catalyst SW1 (`SW1-DISTRIB`)** : [`docs/network/configs/SW1_Switch_Config.ios`](file:///C:/Users/pc/OneDrive/Desktop/4eme_ann%C3%A9e/CISCO/docs/network/configs/SW1_Switch_Config.ios)
+2. **Commutateur Cisco Catalyst SW1 (`SW1-DISTRIB`)** : [`docs/network/configs/SW1_Switch_Config.ios`](file:///C:/Users/pc/OneDrive/Desktop/4eme_ann%C3%A9e/InduTwin/docs/network/configs/SW1_Switch_Config.ios)
    - Création des VLANs 10 (`INDUSTRIAL_PLANT`) et 20 (`SCADA_SUPERVISION`).
    - Ports d'accès Atelier (`FastEthernet0/1` à `0/3`) configurés en VLAN 10 avec `spanning-tree portfast`.
    - Ports d'accès Supervision (`FastEthernet0/10` à `0/12`) configurés en VLAN 20 avec `spanning-tree portfast`.

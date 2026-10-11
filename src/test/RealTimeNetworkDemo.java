@@ -9,7 +9,6 @@ import control.ControlServer;
 import control.IndustrialCommandHandler;
 import industrial.IndustrialSupervisor;
 import industrial.MachineSimulator;
-import model.industrial.Machine;
 import model.industrial.MachineState;
 import monitoring.NetworkStatistics;
 import persistence.DatabaseConfig;

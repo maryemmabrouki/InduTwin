@@ -1,7 +1,6 @@
 package ui.industrial;
 
 import industrial.IndustrialSupervisor;
-import model.industrial.AlarmLevel;
 import model.industrial.MachineState;
 import model.industrial.SensorType;
 import model.industrial.Threshold;
@@ -35,6 +34,7 @@ public class SensorPanel extends JPanel {
     public static class SensorGaugeWidget extends ModernGaugeCard {
         private static final long serialVersionUID = 1L;
 
+        @Deprecated
         public SensorGaugeWidget(SensorType sensorType, String name, double minScale, double maxScale, Threshold threshold) {
             super(sensorType, name, minScale, maxScale, threshold);
         }

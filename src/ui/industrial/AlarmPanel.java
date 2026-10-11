@@ -1,10 +1,10 @@
 package ui.industrial;
 
-import model.industrial.AlarmLevel;
 import model.industrial.IndustrialEvent;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
+import ui.industrial.components.ModernButton;
+import ui.industrial.theme.UITheme;
+
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -40,36 +40,43 @@ public class AlarmPanel extends JPanel {
 
     public AlarmPanel(Runnable onClearHistory) {
         setLayout(new BorderLayout(6, 6));
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
-                BorderFactory.createEmptyBorder(8, 10, 8, 10)
-        ));
+        setBackground(UITheme.SURFACE);
+        setBorder(UITheme.createCardBorder());
 
         // Barre d'outils et filtres supérieure
         JPanel toolbar = new JPanel(new BorderLayout());
         toolbar.setOpaque(false);
 
         JLabel titleLabel = new JLabel("JOURNAL DES ÉVÉNEMENTS & ALARMES");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        titleLabel.setForeground(new Color(71, 85, 105));
+        titleLabel.setFont(UITheme.FONT_SUBTITLE);
+        titleLabel.setForeground(UITheme.TEXT_PRIMARY);
         toolbar.add(titleLabel, BorderLayout.WEST);
 
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         filterPanel.setOpaque(false);
 
-        filterPanel.add(new JLabel("Niveau :"));
+        JLabel lblLevel = new JLabel("Niveau :");
+        lblLevel.setFont(UITheme.FONT_SMALL);
+        lblLevel.setForeground(UITheme.TEXT_SECONDARY);
+        filterPanel.add(lblLevel);
+
         levelFilterCombo = new JComboBox<>(new String[]{"Tous", "CRITICAL", "WARNING", "INFO"});
+        UITheme.styleComboBox(levelFilterCombo);
         levelFilterCombo.addActionListener(e -> applyFilter());
         filterPanel.add(levelFilterCombo);
 
-        filterPanel.add(new JLabel("Machine :"));
+        JLabel lblMachine = new JLabel("Machine :");
+        lblMachine.setFont(UITheme.FONT_SMALL);
+        lblMachine.setForeground(UITheme.TEXT_SECONDARY);
+        filterPanel.add(lblMachine);
+
         machineFilterCombo = new JComboBox<>(new String[]{"Toutes", "M01", "M02", "M03"});
+        UITheme.styleComboBox(machineFilterCombo);
         machineFilterCombo.addActionListener(e -> applyFilter());
         filterPanel.add(machineFilterCombo);
 
-        JButton clearBtn = new JButton("Effacer");
-        clearBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        ModernButton clearBtn = new ModernButton("Effacer", ModernButton.ButtonVariant.GHOST);
+        clearBtn.setFont(UITheme.FONT_SMALL);
         clearBtn.addActionListener(e -> {
             clearEvents();
             if (onClearHistory != null) onClearHistory.run();
@@ -90,36 +97,54 @@ public class AlarmPanel extends JPanel {
         };
 
         table = new JTable(tableModel);
-        table.setRowHeight(22);
-        table.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
+        UITheme.styleTable(table);
 
         // Largeurs de colonnes optimisées
         table.getColumnModel().getColumn(0).setPreferredWidth(70);
-        table.getColumnModel().getColumn(1).setPreferredWidth(80);
+        table.getColumnModel().getColumn(1).setPreferredWidth(85);
         table.getColumnModel().getColumn(2).setPreferredWidth(65);
         table.getColumnModel().getColumn(3).setPreferredWidth(160);
         table.getColumnModel().getColumn(4).setPreferredWidth(260);
 
-        // Rendu coloré par gravité
+        // Rendu stylisé Dark Slate par gravité
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             private static final long serialVersionUID = 1L;
             @Override
             public Component getTableCellRendererComponent(JTable tbl, Object value, boolean isSelected,
                                                            boolean hasFocus, int row, int col) {
                 Component c = super.getTableCellRendererComponent(tbl, value, isSelected, hasFocus, row, col);
-                String levelStr = (String) tbl.getValueAt(row, 1);
+                String levelStr = String.valueOf(tbl.getValueAt(row, 1));
 
-                if (!isSelected) {
-                    if ("CRITICAL".equalsIgnoreCase(levelStr)) {
-                        c.setBackground(new Color(254, 226, 226)); // Rouge très clair
-                        c.setForeground(new Color(153, 27, 27));   // Rouge foncé
-                    } else if ("WARNING".equalsIgnoreCase(levelStr)) {
-                        c.setBackground(new Color(254, 243, 199)); // Ambre très clair
-                        c.setForeground(new Color(180, 83, 9));    // Ambre foncé
+                if (isSelected) {
+                    c.setBackground(UITheme.SURFACE_HOVER);
+                    c.setForeground(Color.WHITE);
+                } else {
+                    // Lignes alternées sombres
+                    c.setBackground(row % 2 == 0 ? UITheme.SURFACE : UITheme.SURFACE_ALT);
+
+                    if (col == 1) {
+                        // Colonne Niveau d'alarme
+                        if ("CRITICAL".equalsIgnoreCase(levelStr)) {
+                            c.setForeground(UITheme.STATUS_CRITICAL);
+                            c.setFont(c.getFont().deriveFont(Font.BOLD));
+                        } else if ("WARNING".equalsIgnoreCase(levelStr)) {
+                            c.setForeground(UITheme.STATUS_WARNING);
+                            c.setFont(c.getFont().deriveFont(Font.BOLD));
+                        } else if ("INFO".equalsIgnoreCase(levelStr)) {
+                            c.setForeground(UITheme.STATUS_MAINTENANCE);
+                            c.setFont(c.getFont().deriveFont(Font.PLAIN));
+                        } else {
+                            c.setForeground(UITheme.STATUS_RUNNING);
+                            c.setFont(c.getFont().deriveFont(Font.PLAIN));
+                        }
+                    } else if (col == 0) {
+                        // Heure atténuée
+                        c.setForeground(UITheme.TEXT_MUTED);
+                    } else if (col == 2) {
+                        // Machine en cyan
+                        c.setForeground(UITheme.BORDER_ACTIVE);
                     } else {
-                        c.setBackground(row % 2 == 0 ? Color.WHITE : new Color(248, 250, 252));
-                        c.setForeground(new Color(30, 41, 59));
+                        c.setForeground(UITheme.TEXT_PRIMARY);
                     }
                 }
                 return c;
@@ -127,7 +152,7 @@ public class AlarmPanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(226, 232, 240)));
+        UITheme.styleScrollPane(scrollPane);
         add(scrollPane, BorderLayout.CENTER);
     }
 
