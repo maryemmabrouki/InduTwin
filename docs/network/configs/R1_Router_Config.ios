@@ -1,0 +1,105 @@
+! ==================================================================
+! CISCO ROUTER CONFIGURATION : R1-INDUS (Cisco 2911 / 4331)
+! PROJET : InduTwin - Distributed Industrial Digital Twin (Phase 6)
+! RÔLE   : Passerelle Inter-VLAN, PIM Multicast Routing, ACLs & QoS
+! ==================================================================
+
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R1-INDUS
+!
+ip multicast-routing
+!
+! --- ACL CLASSIFICATION QOS ---
+ip access-list extended ACL_MATCH_CONTROL
+ permit tcp any any eq 5556
+ permit tcp any eq 5556 any
+exit
+!
+ip access-list extended ACL_MATCH_TELEMETRY
+ permit udp any host 224.1.1.1 eq 5555
+ permit udp any any eq 5555
+exit
+!
+! --- CLASS-MAPS QOS ---
+class-map match-any CM_CRITICAL_CONTROL
+ match access-group name ACL_MATCH_CONTROL
+exit
+!
+class-map match-any CM_INDUSTRIAL_TELEMETRY
+ match access-group name ACL_MATCH_TELEMETRY
+exit
+!
+! --- POLICY-MAP QOS (LLQ + CBWFQ) ---
+policy-map PM_INDUSTRIAL_QOS
+ class CM_CRITICAL_CONTROL
+  set dscp cs6
+  priority percent 30
+ class CM_INDUSTRIAL_TELEMETRY
+  set dscp af21
+  bandwidth percent 40
+ class class-default
+  set dscp default
+  fair-queue
+exit
+!
+! --- ACL SECURITE SUPERVISION (VLAN 20 -> VLAN 10) ---
+ip access-list extended ACL_SUPERVISION_IN
+ permit tcp host 192.168.20.10 192.168.10.0 0.0.0.255 eq 5556
+ permit icmp host 192.168.20.10 192.168.10.0 0.0.0.255 echo
+ permit icmp host 192.168.20.10 192.168.10.0 0.0.0.255 echo-reply
+ permit tcp 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255 established
+ deny ip any 192.168.10.0 0.0.0.255 log
+ permit ip any any
+exit
+!
+! --- ACL SECURITE ATELIER (VLAN 10 -> VLAN 20) ---
+ip access-list extended ACL_INDUSTRIAL_IN
+ permit udp 192.168.10.0 0.0.0.255 host 224.1.1.1 eq 5555
+ permit igmp 192.168.10.0 0.0.0.255 any
+ permit tcp 192.168.10.0 0.0.0.255 host 192.168.20.10 established
+ permit icmp 192.168.10.0 0.0.0.255 host 192.168.20.10 echo-reply
+ deny tcp 192.168.10.0 0.0.0.255 host 192.168.20.10 eq 1099 log
+ deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255 log
+ permit ip any any
+exit
+!
+! --- INTERFACES PHYSIQUES & SOUS-INTERFACES 802.1Q ---
+interface GigabitEthernet0/0
+ description Liaison Trunk vers SW1 Gi0/1
+ no ip address
+ duplex auto
+ speed auto
+ no shutdown
+!
+interface GigabitEthernet0/0.10
+ description Passerelle Atelier VLAN 10
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+ ip access-group ACL_INDUSTRIAL_IN in
+ ip pim sparse-mode
+ ip igmp version 2
+ service-policy output PM_INDUSTRIAL_QOS
+ no shutdown
+!
+interface GigabitEthernet0/0.20
+ description Passerelle Supervision VLAN 20
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+ ip access-group ACL_SUPERVISION_IN in
+ ip pim sparse-mode
+ ip igmp version 2
+ service-policy output PM_INDUSTRIAL_QOS
+ no shutdown
+!
+ip pim rp-address 192.168.20.1
+!
+line con 0
+ logging synchronous
+line vty 0 4
+ login
+!
+end
