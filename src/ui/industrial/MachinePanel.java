@@ -2,6 +2,8 @@ package ui.industrial;
 
 import industrial.IndustrialSupervisor;
 import model.industrial.MachineState;
+import ui.industrial.components.ModernBadge;
+import ui.industrial.theme.UITheme;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -9,7 +11,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -33,7 +34,7 @@ public class MachinePanel extends JPanel {
 
         private final String id;
         private final String name;
-        private final MachineStatusIndicator statusIndicator;
+        private final ModernBadge statusBadge;
         private final JLabel lastSeenLabel;
         private boolean isSelected = false;
 
@@ -42,30 +43,28 @@ public class MachinePanel extends JPanel {
             this.name = name;
 
             setLayout(new BorderLayout(8, 4));
-            setBackground(Color.WHITE);
-            setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
-                    BorderFactory.createEmptyBorder(8, 10, 8, 10)
-            ));
+            setBackground(UITheme.SURFACE);
+            setBorder(UITheme.createCardBorder());
             setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             JPanel textPanel = new JPanel(new GridLayout(2, 1, 2, 2));
             textPanel.setOpaque(false);
 
             JLabel titleLabel = new JLabel(id + " — " + name);
-            titleLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+            titleLabel.setFont(UITheme.FONT_SUBTITLE);
+            titleLabel.setForeground(UITheme.TEXT_PRIMARY);
 
             lastSeenLabel = new JLabel("Dernier battement : En attente...");
-            lastSeenLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
-            lastSeenLabel.setForeground(new Color(100, 116, 139));
+            lastSeenLabel.setFont(UITheme.FONT_SMALL);
+            lastSeenLabel.setForeground(UITheme.TEXT_MUTED);
 
             textPanel.add(titleLabel);
             textPanel.add(lastSeenLabel);
 
-            statusIndicator = new MachineStatusIndicator(MachineState.STOPPED);
+            statusBadge = new ModernBadge(MachineState.STOPPED);
 
             add(textPanel, BorderLayout.CENTER);
-            add(statusIndicator, BorderLayout.EAST);
+            add(statusBadge, BorderLayout.EAST);
 
             addMouseListener(new MouseAdapter() {
                 @Override
@@ -74,29 +73,39 @@ public class MachinePanel extends JPanel {
                         onSelect.accept(id);
                     }
                 }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    if (!isSelected) {
+                        setBackground(UITheme.SURFACE_HOVER);
+                        repaint();
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    if (!isSelected) {
+                        setBackground(UITheme.SURFACE);
+                        repaint();
+                    }
+                }
             });
         }
 
         public void setSelected(boolean selected) {
             this.isSelected = selected;
             if (selected) {
-                setBackground(new Color(240, 249, 255));
-                setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(new Color(59, 130, 246), 2),
-                        BorderFactory.createEmptyBorder(7, 9, 7, 9)
-                ));
+                setBackground(UITheme.SURFACE_ALT);
+                setBorder(UITheme.createActiveCardBorder());
             } else {
-                setBackground(Color.WHITE);
-                setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
-                        BorderFactory.createEmptyBorder(8, 10, 8, 10)
-                ));
+                setBackground(UITheme.SURFACE);
+                setBorder(UITheme.createCardBorder());
             }
             repaint();
         }
 
         public void updateState(MachineState state, long lastSeen) {
-            statusIndicator.updateState(state);
+            statusBadge.setState(state);
             long elapsed = (System.currentTimeMillis() - lastSeen) / 1000;
             if (lastSeen <= 0) {
                 lastSeenLabel.setText("Dernier battement : Aucun");
@@ -127,8 +136,8 @@ public class MachinePanel extends JPanel {
 
         // Header du panneau
         JLabel headerLabel = new JLabel("PARC DES MACHINES");
-        headerLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        headerLabel.setForeground(new Color(71, 85, 105));
+        headerLabel.setFont(UITheme.FONT_SUBTITLE);
+        headerLabel.setForeground(UITheme.TEXT_SECONDARY);
         headerLabel.setBorder(BorderFactory.createEmptyBorder(0, 4, 8, 0));
         add(headerLabel);
 

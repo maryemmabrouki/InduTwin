@@ -3,17 +3,13 @@ package ui.industrial;
 import industrial.FaultInjector;
 import industrial.MachineSimulator;
 import model.industrial.Machine;
+import ui.industrial.components.ModernButton;
+import ui.industrial.theme.UITheme;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridLayout;
 
 /**
@@ -28,33 +24,37 @@ public class FaultInjectionPanel extends JPanel {
 
     public FaultInjectionPanel(MachineSimulator simulator) {
         setLayout(new BorderLayout(6, 6));
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
-                BorderFactory.createEmptyBorder(8, 10, 8, 10)
-        ));
+        setBackground(UITheme.SURFACE);
+        setBorder(UITheme.createCardBorder());
 
         JLabel titleLabel = new JLabel("INJECTION DE PANNES (TESTS / DÉMO)");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        titleLabel.setForeground(new Color(71, 85, 105));
+        titleLabel.setFont(UITheme.FONT_SUBTITLE);
+        titleLabel.setForeground(UITheme.TEXT_PRIMARY);
         add(titleLabel, BorderLayout.NORTH);
 
         JPanel buttonsGrid = new JPanel(new GridLayout(3, 2, 6, 6));
         buttonsGrid.setOpaque(false);
 
-        JButton overheatBtn = new JButton("🔥 M02 : Surchauffe (98°C)");
-        JButton vibBtn = new JButton("⚡ M01 : Vibration (9.5 mm/s)");
-        JButton stopHbBtn = new JButton("🔌 M03 : Couper Heartbeat");
-        JButton restoreHbBtn = new JButton("🔄 M03 : Rétablir Heartbeat");
-        JButton resetAllBtn = new JButton("✅ Rétablir Tout");
-        JButton stopPressBtn = new JButton("🛑 Arrêt Urgence M01");
+        ModernButton overheatBtn = new ModernButton("🔥 M02 : Surchauffe (98°C)", ModernButton.ButtonVariant.SECONDARY);
+        overheatBtn.setCustomAccentColor(UITheme.STATUS_WARNING);
+        overheatBtn.setFont(UITheme.FONT_SMALL);
 
-        overheatBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        vibBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        stopHbBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        restoreHbBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        resetAllBtn.setFont(new Font("SansSerif", Font.BOLD, 11));
-        stopPressBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        ModernButton vibBtn = new ModernButton("⚡ M01 : Vibration (9.5 mm/s)", ModernButton.ButtonVariant.SECONDARY);
+        vibBtn.setCustomAccentColor(UITheme.STATUS_WARNING);
+        vibBtn.setFont(UITheme.FONT_SMALL);
+
+        ModernButton stopHbBtn = new ModernButton("🔌 M03 : Couper Heartbeat", ModernButton.ButtonVariant.SECONDARY);
+        stopHbBtn.setCustomAccentColor(UITheme.STATUS_CRITICAL);
+        stopHbBtn.setFont(UITheme.FONT_SMALL);
+
+        ModernButton restoreHbBtn = new ModernButton("🔄 M03 : Rétablir Heartbeat", ModernButton.ButtonVariant.GHOST);
+        restoreHbBtn.setFont(UITheme.FONT_SMALL);
+
+        ModernButton stopPressBtn = new ModernButton("🛑 Arrêt Urgence M01", ModernButton.ButtonVariant.DANGER);
+        stopPressBtn.setFont(UITheme.FONT_SMALL);
+
+        ModernButton resetAllBtn = new ModernButton("✅ Rétablir Tout", ModernButton.ButtonVariant.PRIMARY);
+        resetAllBtn.setFont(UITheme.FONT_SMALL);
 
         overheatBtn.addActionListener(e -> {
             if (simulator != null) {
@@ -115,8 +115,8 @@ public class FaultInjectionPanel extends JPanel {
         add(buttonsGrid, BorderLayout.CENTER);
 
         statusLabel = new JLabel("Prêt pour scénarios d'anomalies.");
-        statusLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
-        statusLabel.setForeground(new Color(100, 116, 139));
+        statusLabel.setFont(UITheme.FONT_TINY);
+        statusLabel.setForeground(UITheme.TEXT_MUTED);
         statusLabel.setBorder(BorderFactory.createEmptyBorder(4, 2, 0, 0));
         add(statusLabel, BorderLayout.SOUTH);
     }

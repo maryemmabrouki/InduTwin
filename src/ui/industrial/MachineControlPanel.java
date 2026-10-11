@@ -7,20 +7,18 @@ import control.ControlResponse;
 import control.ControlStatus;
 import industrial.IndustrialSupervisor;
 import model.industrial.MachineState;
+import ui.industrial.components.ModernBadge;
+import ui.industrial.components.ModernButton;
+import ui.industrial.theme.UITheme;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridLayout;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,15 +35,15 @@ public class MachineControlPanel extends JPanel {
     private MachineState currentMachineState = MachineState.STOPPED;
 
     private final JLabel titleLabel;
-    private final JLabel stateBadge;
+    private final ModernBadge stateBadge;
     private final JLabel lastCmdLabel;
     private final JLabel lastResponseLabel;
 
-    private final JButton btnStart;
-    private final JButton btnStop;
-    private final JButton btnMaint;
-    private final JButton btnReset;
-    private final JButton btnEmergencyStop;
+    private final ModernButton btnStart;
+    private final ModernButton btnStop;
+    private final ModernButton btnMaint;
+    private final ModernButton btnReset;
+    private final ModernButton btnEmergencyStop;
 
     private final ExecutorService networkExecutor = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "TCP-Control-UI-Worker");
@@ -55,23 +53,18 @@ public class MachineControlPanel extends JPanel {
 
     public MachineControlPanel() {
         setLayout(new BorderLayout(8, 8));
-        setBackground(Color.WHITE);
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(203, 213, 225), 1),
-                BorderFactory.createEmptyBorder(10, 12, 10, 12)
-        ));
+        setBackground(UITheme.SURFACE);
+        setBorder(UITheme.createCardBorder());
 
         // 1. En-tête : Titre et état actuel
         JPanel headerPanel = new JPanel(new BorderLayout(8, 4));
         headerPanel.setOpaque(false);
 
         titleLabel = new JLabel("CONTRÔLE COMMANDE TCP — " + currentMachineId);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        titleLabel.setForeground(new Color(30, 41, 59));
+        titleLabel.setFont(UITheme.FONT_SUBTITLE);
+        titleLabel.setForeground(UITheme.TEXT_PRIMARY);
 
-        stateBadge = new JLabel("ÉTAT : " + currentMachineState);
-        stateBadge.setFont(new Font("SansSerif", Font.BOLD, 11));
-        stateBadge.setForeground(new Color(100, 116, 139));
+        stateBadge = new ModernBadge(currentMachineState);
 
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(stateBadge, BorderLayout.EAST);
@@ -85,10 +78,19 @@ public class MachineControlPanel extends JPanel {
         JPanel standardButtons = new JPanel(new GridLayout(2, 2, 6, 6));
         standardButtons.setOpaque(false);
 
-        btnStart = createActionButton("▶ START", new Color(16, 185, 129), e -> sendCommandAsync(ControlCommandType.START));
-        btnStop = createActionButton("⏹ STOP", new Color(245, 158, 11), e -> sendCommandAsync(ControlCommandType.STOP));
-        btnMaint = createActionButton("🛠 MAINTENANCE", new Color(59, 130, 246), e -> sendCommandAsync(ControlCommandType.MAINTENANCE));
-        btnReset = createActionButton("🔄 RESET", new Color(100, 116, 139), e -> sendCommandAsync(ControlCommandType.RESET));
+        btnStart = new ModernButton("▶ START", ModernButton.ButtonVariant.PRIMARY);
+        btnStart.addActionListener(e -> sendCommandAsync(ControlCommandType.START));
+
+        btnStop = new ModernButton("⏹ STOP", ModernButton.ButtonVariant.SECONDARY);
+        btnStop.setCustomAccentColor(UITheme.STATUS_WARNING);
+        btnStop.addActionListener(e -> sendCommandAsync(ControlCommandType.STOP));
+
+        btnMaint = new ModernButton("🛠 MAINTENANCE", ModernButton.ButtonVariant.SECONDARY);
+        btnMaint.setCustomAccentColor(UITheme.STATUS_MAINTENANCE);
+        btnMaint.addActionListener(e -> sendCommandAsync(ControlCommandType.MAINTENANCE));
+
+        btnReset = new ModernButton("🔄 RESET", ModernButton.ButtonVariant.GHOST);
+        btnReset.addActionListener(e -> sendCommandAsync(ControlCommandType.RESET));
 
         standardButtons.add(btnStart);
         standardButtons.add(btnStop);
@@ -99,14 +101,9 @@ public class MachineControlPanel extends JPanel {
         buttonsContainer.add(Box.createRigidArea(new Dimension(0, 8)));
 
         // Bouton EMERGENCY STOP proéminent et rouge
-        btnEmergencyStop = new JButton("🛑 ARRÊT D'URGENCE (EMERGENCY STOP)");
-        btnEmergencyStop.setFont(new Font("SansSerif", Font.BOLD, 12));
-        btnEmergencyStop.setForeground(Color.WHITE);
-        btnEmergencyStop.setBackground(new Color(220, 38, 38));
-        btnEmergencyStop.setFocusPainted(false);
-        btnEmergencyStop.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnEmergencyStop.setPreferredSize(new Dimension(0, 34));
-        btnEmergencyStop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        btnEmergencyStop = new ModernButton("🛑 ARRÊT D'URGENCE (EMERGENCY STOP)", ModernButton.ButtonVariant.DANGER);
+        btnEmergencyStop.setPreferredSize(new Dimension(0, 36));
+        btnEmergencyStop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
         btnEmergencyStop.addActionListener(e -> sendCommandAsync(ControlCommandType.EMERGENCY_STOP));
 
         buttonsContainer.add(btnEmergencyStop);
@@ -118,31 +115,16 @@ public class MachineControlPanel extends JPanel {
         statusFooter.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
 
         lastCmdLabel = new JLabel("Dernière commande : Aucune");
-        lastCmdLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        lastCmdLabel.setForeground(new Color(71, 85, 105));
+        lastCmdLabel.setFont(UITheme.FONT_SMALL);
+        lastCmdLabel.setForeground(UITheme.TEXT_SECONDARY);
 
         lastResponseLabel = new JLabel("Réponse TCP : En attente");
-        lastResponseLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
-        lastResponseLabel.setForeground(new Color(148, 163, 184));
+        lastResponseLabel.setFont(UITheme.FONT_SMALL);
+        lastResponseLabel.setForeground(UITheme.TEXT_MUTED);
 
         statusFooter.add(lastCmdLabel);
         statusFooter.add(lastResponseLabel);
         add(statusFooter, BorderLayout.SOUTH);
-    }
-
-    private JButton createActionButton(String text, Color accentColor, java.awt.event.ActionListener listener) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 11));
-        btn.setForeground(new Color(30, 41, 59));
-        btn.setBackground(new Color(248, 250, 252));
-        btn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(203, 213, 225), 1),
-                BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-        btn.setFocusPainted(false);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.addActionListener(listener);
-        return btn;
     }
 
     public void setMachine(String machineId, MachineState state) {
@@ -151,8 +133,7 @@ public class MachineControlPanel extends JPanel {
             this.currentMachineState = state;
         }
         titleLabel.setText("CONTRÔLE COMMANDE TCP — " + this.currentMachineId);
-        stateBadge.setText("ÉTAT : " + this.currentMachineState);
-        updateStateBadgeColor(this.currentMachineState);
+        stateBadge.setState(this.currentMachineState);
     }
 
     public void updateState(IndustrialSupervisor supervisor) {
@@ -160,22 +141,7 @@ public class MachineControlPanel extends JPanel {
         IndustrialSupervisor.MachineSupervisionInfo info = supervisor.getMachineInfo(currentMachineId);
         if (info != null && info.getState() != null) {
             this.currentMachineState = info.getState();
-            stateBadge.setText("ÉTAT : " + this.currentMachineState);
-            updateStateBadgeColor(this.currentMachineState);
-        }
-    }
-
-    private void updateStateBadgeColor(MachineState state) {
-        if (state == MachineState.RUNNING) {
-            stateBadge.setForeground(new Color(22, 163, 74));
-        } else if (state == MachineState.WARNING) {
-            stateBadge.setForeground(new Color(217, 119, 6));
-        } else if (state == MachineState.CRITICAL || state == MachineState.FAILURE) {
-            stateBadge.setForeground(new Color(220, 38, 38));
-        } else if (state == MachineState.MAINTENANCE) {
-            stateBadge.setForeground(new Color(37, 99, 235));
-        } else {
-            stateBadge.setForeground(new Color(100, 116, 139));
+            stateBadge.setState(this.currentMachineState);
         }
     }
 
@@ -186,7 +152,7 @@ public class MachineControlPanel extends JPanel {
 
         lastCmdLabel.setText(String.format("Dernière commande : %s sur %s (%s)", type, machine, cmdId));
         lastResponseLabel.setText("Envoi TCP en cours...");
-        lastResponseLabel.setForeground(new Color(59, 130, 246));
+        lastResponseLabel.setForeground(UITheme.STATUS_STARTING);
 
         // Exécution strictly hors de l'EDT Swing
         networkExecutor.submit(() -> {
@@ -196,7 +162,7 @@ public class MachineControlPanel extends JPanel {
             } catch (Exception e) {
                 SwingUtilities.invokeLater(() -> {
                     lastResponseLabel.setText("Erreur TCP: " + e.getMessage());
-                    lastResponseLabel.setForeground(new Color(220, 38, 38));
+                    lastResponseLabel.setForeground(UITheme.STATUS_CRITICAL);
                 });
             }
         });
@@ -205,7 +171,7 @@ public class MachineControlPanel extends JPanel {
     private void displayResponse(ControlResponse resp) {
         if (resp == null) {
             lastResponseLabel.setText("Réponse : Nulle / Timeout");
-            lastResponseLabel.setForeground(new Color(220, 38, 38));
+            lastResponseLabel.setForeground(UITheme.STATUS_CRITICAL);
             return;
         }
 
@@ -213,11 +179,11 @@ public class MachineControlPanel extends JPanel {
         lastResponseLabel.setText(text);
 
         if (resp.getStatus() == ControlStatus.ACCEPTED) {
-            lastResponseLabel.setForeground(new Color(22, 163, 74));
+            lastResponseLabel.setForeground(UITheme.STATUS_RUNNING);
         } else if (resp.getStatus() == ControlStatus.REJECTED) {
-            lastResponseLabel.setForeground(new Color(217, 119, 6));
+            lastResponseLabel.setForeground(UITheme.STATUS_WARNING);
         } else {
-            lastResponseLabel.setForeground(new Color(220, 38, 38));
+            lastResponseLabel.setForeground(UITheme.STATUS_CRITICAL);
         }
     }
 

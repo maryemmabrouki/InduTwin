@@ -10,6 +10,8 @@ import model.industrial.MachineState;
 import monitoring.NetworkStatistics;
 import persistence.PersistenceService;
 import rmi.RmiServer;
+import ui.industrial.components.ModernBadge;
+import ui.industrial.theme.UITheme;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -47,9 +49,9 @@ public class IndustrialDashboard extends JFrame {
     private RmiServer rmiServer;
 
     private final JLabel headerTitleLabel;
-    private final JLabel summaryOnlineLabel;
-    private final JLabel summaryAlarmsLabel;
-    private final JLabel summaryNetworkLabel;
+    private final ModernBadge summaryOnlineBadge;
+    private final ModernBadge summaryAlarmsBadge;
+    private final ModernBadge summaryNetworkBadge;
 
     private final MachinePanel machinePanel;
     private final MachineControlPanel machineControlPanel;
@@ -77,27 +79,30 @@ public class IndustrialDashboard extends JFrame {
         setMinimumSize(new Dimension(1020, 720));
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(new Color(241, 245, 249)); // Slate 100
+        getContentPane().setBackground(UITheme.BG_DARK);
 
         // 1. En-tête de supervision
-        JPanel headerPanel = new JPanel(new BorderLayout(10, 10));
-        headerPanel.setBackground(new Color(15, 23, 42)); // Slate 900
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+        JPanel headerPanel = new JPanel(new BorderLayout(12, 10));
+        headerPanel.setBackground(UITheme.BG_HEADER);
+        headerPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.BORDER),
+                BorderFactory.createEmptyBorder(12, 18, 12, 18)
+        ));
 
         headerTitleLabel = new JLabel("PLATEFORME DE SUPERVISION INDUSTRIELLE 4.0");
-        headerTitleLabel.setFont(new Font("SansSerif", Font.BOLD, 17));
-        headerTitleLabel.setForeground(Color.WHITE);
+        headerTitleLabel.setFont(UITheme.FONT_HEADER_TITLE);
+        headerTitleLabel.setForeground(UITheme.TEXT_PRIMARY);
 
-        JPanel summaryPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 14, 0));
+        JPanel summaryPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         summaryPanel.setOpaque(false);
 
-        summaryOnlineLabel = createSummaryBadge("● En ligne : 3/3", new Color(34, 197, 94));
-        summaryAlarmsLabel = createSummaryBadge("⚠️ Alarmes : 0", new Color(245, 158, 11));
-        summaryNetworkLabel = createSummaryBadge("🌐 Réseau : HEALTHY", new Color(59, 130, 246));
+        summaryOnlineBadge = new ModernBadge("En ligne : 3/3", UITheme.STATUS_RUNNING);
+        summaryAlarmsBadge = new ModernBadge("Alarmes : 0", UITheme.STATUS_RUNNING);
+        summaryNetworkBadge = new ModernBadge("Réseau : HEALTHY", UITheme.STATUS_RUNNING);
 
-        summaryPanel.add(summaryOnlineLabel);
-        summaryPanel.add(summaryAlarmsLabel);
-        summaryPanel.add(summaryNetworkLabel);
+        summaryPanel.add(summaryOnlineBadge);
+        summaryPanel.add(summaryAlarmsBadge);
+        summaryPanel.add(summaryNetworkBadge);
 
         headerPanel.add(headerTitleLabel, BorderLayout.WEST);
         headerPanel.add(summaryPanel, BorderLayout.EAST);
@@ -133,8 +138,10 @@ public class IndustrialDashboard extends JFrame {
         // Split supérieur (Machines/Contrôle + Capteurs)
         JSplitPane topSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, sensorPanel);
         topSplit.setDividerLocation(345);
+        topSplit.setDividerSize(6);
         topSplit.setContinuousLayout(true);
         topSplit.setOpaque(false);
+        topSplit.setBackground(UITheme.BG_DARK);
         topSplit.setBorder(BorderFactory.createEmptyBorder(10, 12, 6, 12));
 
         // 3. Panneaux inférieurs (Surveillance Temps Réel & Audit Persistant SQLite)
@@ -143,8 +150,10 @@ public class IndustrialDashboard extends JFrame {
 
         JSplitPane bottomLiveSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, alarmPanel, networkHealthPanel);
         bottomLiveSplit.setDividerLocation(680);
+        bottomLiveSplit.setDividerSize(6);
         bottomLiveSplit.setContinuousLayout(true);
         bottomLiveSplit.setOpaque(false);
+        bottomLiveSplit.setBackground(UITheme.BG_DARK);
         bottomLiveSplit.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
 
         if (this.supervisor.getPersistenceService() == null) {
@@ -157,7 +166,9 @@ public class IndustrialDashboard extends JFrame {
         databaseHistoryPanel = new DatabaseHistoryPanel(this.persistenceService);
 
         JTabbedPane bottomTabs = new JTabbedPane();
-        bottomTabs.setFont(new Font("SansSerif", Font.BOLD, 12));
+        bottomTabs.setFont(UITheme.FONT_SUBTITLE);
+        bottomTabs.setBackground(UITheme.SURFACE);
+        bottomTabs.setForeground(UITheme.TEXT_PRIMARY);
         bottomTabs.addTab("🚨 Surveillance Temps Réel & Réseau", bottomLiveSplit);
         bottomTabs.addTab("💾 Historique & Audit Persistant (SQLite)", databaseHistoryPanel);
         bottomTabs.setPreferredSize(new Dimension(0, 270));
@@ -165,8 +176,10 @@ public class IndustrialDashboard extends JFrame {
         // Assemblage vertical
         JSplitPane mainSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, topSplit, bottomTabs);
         mainSplit.setDividerLocation(470);
+        mainSplit.setDividerSize(6);
         mainSplit.setContinuousLayout(true);
         mainSplit.setOpaque(false);
+        mainSplit.setBackground(UITheme.BG_DARK);
         mainSplit.setBorder(null);
 
         add(mainSplit, BorderLayout.CENTER);
@@ -233,13 +246,7 @@ public class IndustrialDashboard extends JFrame {
         super.dispose();
     }
 
-    private JLabel createSummaryBadge(String text, Color color) {
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("SansSerif", Font.BOLD, 12));
-        label.setForeground(color);
-        label.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
-        return label;
-    }
+
 
     private void initServices() {
         try {
@@ -304,29 +311,24 @@ public class IndustrialDashboard extends JFrame {
         }
 
         int totalMachines = supervisor.getMachines().size();
-        summaryOnlineLabel.setText(String.format("● En ligne : %d/%d", onlineCount, totalMachines));
-        if (onlineCount < totalMachines) {
-            summaryOnlineLabel.setForeground(new Color(239, 68, 68));
-        } else {
-            summaryOnlineLabel.setForeground(new Color(34, 197, 94));
-        }
+        String onlineText = String.format("En ligne : %d/%d", onlineCount, totalMachines);
+        Color onlineColor = (onlineCount < totalMachines) ? UITheme.STATUS_CRITICAL : UITheme.STATUS_RUNNING;
+        summaryOnlineBadge.setCustom(onlineText, onlineColor);
 
-        summaryAlarmsLabel.setText("⚠️ Alarmes : " + alarmCount);
-        if (alarmCount > 0) {
-            summaryAlarmsLabel.setForeground(new Color(245, 158, 11));
-        } else {
-            summaryAlarmsLabel.setForeground(new Color(148, 163, 184));
-        }
+        String alarmText = "Alarmes : " + alarmCount;
+        Color alarmColor = (alarmCount > 0) ? UITheme.STATUS_WARNING : UITheme.TEXT_MUTED;
+        summaryAlarmsBadge.setCustom(alarmText, alarmColor);
 
         String health = stats.getHealthStatus();
-        summaryNetworkLabel.setText("🌐 Réseau : " + health);
+        Color networkColor;
         if ("HEALTHY".equalsIgnoreCase(health)) {
-            summaryNetworkLabel.setForeground(new Color(34, 197, 94));
+            networkColor = UITheme.STATUS_RUNNING;
         } else if ("WARNING".equalsIgnoreCase(health)) {
-            summaryNetworkLabel.setForeground(new Color(245, 158, 11));
+            networkColor = UITheme.STATUS_WARNING;
         } else {
-            summaryNetworkLabel.setForeground(new Color(239, 68, 68));
+            networkColor = UITheme.STATUS_CRITICAL;
         }
+        summaryNetworkBadge.setCustom("Réseau : " + health, networkColor);
     }
 
     public static void main(String[] args) {
